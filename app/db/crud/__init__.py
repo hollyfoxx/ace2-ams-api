@@ -27,6 +27,8 @@ def auth(username: str, password: str, db: Session) -> Optional[User]:
     if user and verify_password(password, user.password):
         return user
 
+    return None
+
 
 #
 # CREATE
