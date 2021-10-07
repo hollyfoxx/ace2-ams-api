@@ -74,7 +74,6 @@ def _create_token(token_type: str, lifetime: timedelta, sub: str) -> str:
         "exp": datetime.utcnow() + lifetime,
         "iat": datetime.utcnow(),
         "sub": sub,
-
         # A UUID is used so that if the token is generated at the exact same time it will be different
         "ace2_uuid": str(uuid.uuid4()),
     }
