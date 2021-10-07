@@ -28,3 +28,5 @@ class User(Base):
     timezone = Column(String, default="UTC", nullable=False)
 
     username = Column(String, unique=True, nullable=False)
+
+    refresh_token = Column(String)

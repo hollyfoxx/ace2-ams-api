@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.194.3/containers/python-3
 {
-	"name": "Python 3",
+	"name": "ACE2 AMS API",
 	"build": {
 		"dockerfile": "Dockerfile",
 		"context": "..",
@@ -38,7 +38,8 @@
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"ms-python.python",
-		"ms-python.vscode-pylance"
+		"ms-python.vscode-pylance",
+		"ms-vsliveshare.vsliveshare-pack",
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
