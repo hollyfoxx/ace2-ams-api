@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     Reads OS environment variables and maps them into attributes using Pydantic
     """
 
-    ace_dev: bool
     cookies_samesite: str = Field(default="lax")
     cookies_secure: bool = Field(default=True)
     cors_origins: Union[str, List[str]]
