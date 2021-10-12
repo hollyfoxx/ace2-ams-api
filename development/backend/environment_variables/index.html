@@ -14,7 +14,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.3.2">
+      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.3.3">
     
     
       
@@ -22,7 +22,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.24c991ad.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.5143246d.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.3f5d1f46.min.css">
@@ -410,6 +410,9 @@
 <p>These variables are used by the FastAPI backend application.</p>
 <ul>
 <li><strong>ACE_DEV</strong>: If set (to anything), the application will run in development-mode, which means that the Alembic database migrations will be applied and the database seeded with basic information automatically when the application starts.</li>
+<li><strong>COOKIES_SAMESITE</strong>: The <code>SameSite</code> value to use when sending cookies. The development environment uses <code>lax</code>. Defaults to <code>lax</code>.</li>
+<li><strong>COOKIES_SECURE</strong>: True/False whether or not you want to require HTTPS when sending cookies. The development environment uses <code>False</code>. Defaults to <code>True</code>.</li>
+<li><strong>CORS_ORIGINS</strong>: A comma-separated string of origins to allow with CORS. For example, your development environment should be set to something like <code>http://localhost:8080,http://localhost:8888</code> depending on which port the GUI is served from.</li>
 <li><strong>DATABASE_URL</strong>: The connection string used to connect to the PostgreSQL server. It should be in the form of <code>postgresql://user:password@hostname[:port]/dbname</code>.</li>
 <li><strong>JWT_ACCESS_EXPIRE_SECONDS</strong>: The number of seconds after which an access token will expire. The development environment uses <code>900</code> (15 minutes) by default.</li>
 <li><strong>JWT_ALGORITHM</strong>: Sets the algorithm to use for signing the tokens. The development environment uses <code>HS256</code> by default.</li>
@@ -480,10 +483,10 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../../assets/javascripts/workers/search.e99e714c.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../../assets/javascripts/workers/search.8397ff9e.min.js", "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.bc35569b.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.f89c2efe.min.js"></script>
       
     
   </body>
