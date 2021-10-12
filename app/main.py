@@ -1,23 +1,32 @@
+"""
+Main FastAPI entrypoint
+"""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import router as api_router
+from core.config import get_settings
 
 
 def get_application():
-    app = FastAPI()
+    """
+    Builds and returns the FastAPI application with CORS settings
+    """
 
-    app.add_middleware(
+    _app = FastAPI()
+
+    _app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=get_settings().cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
-    app.include_router(api_router, prefix="/api")
+    _app.include_router(api_router, prefix="/api")
 
-    return app
+    return _app
 
 
 app = get_application()
