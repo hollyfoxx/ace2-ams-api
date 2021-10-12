@@ -26,6 +26,9 @@ services:
             # The DATABASE_URL environment variable needs to be in the form of:
             # postgresql://<user>:<password>@db:5432/<database>
             - ACE_DEV=${ACE_DEV}
+            - COOKIES_SAMESITE=${COOKIES_SAMESITE}
+            - COOKIES_SECURE=${COOKIES_SECURE}
+            - CORS_ORIGINS=${CORS_ORIGINS}
             - DATABASE_URL=${DATABASE_URL}
             - JWT_ACCESS_EXPIRE_SECONDS=${JWT_ACCESS_EXPIRE_SECONDS}
             - JWT_ALGORITHM=${JWT_ALGORITHM}
