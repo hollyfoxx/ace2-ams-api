@@ -41,7 +41,8 @@ class OAuth2PasswordBearerCookieOrHeader(OAuth2):
         )
 
     async def __call__(self, request: Request) -> Optional[str]:
-        authorization: str = request.cookies.get(self.token_type) or request.headers.get("Authorization")  # type: ignore
+        # The Authorization header will takes precedence over cookies
+        authorization: str = request.headers.get("Authorization") or request.cookies.get(self.token_type)  # type: ignore
         scheme, param = get_authorization_scheme_param(authorization)
         if not authorization or scheme.lower() != "bearer":
             # if self.auto_error:
