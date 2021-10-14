@@ -2,7 +2,7 @@ import pytest
 import time
 
 from datetime import datetime, timedelta
-from fastapi import status
+from fastapi import status, testclient
 from jose import jwt
 
 from core.config import get_settings, Settings
@@ -171,7 +171,7 @@ def test_missing_route_authentication(client, route):
 #
 
 
-def test_auth_success(client, db):
+def test_auth_success(client: testclient.TestClient, db):
     create_test_user(db, "johndoe", "abcd1234")
 
     # Attempt to authenticate
@@ -182,6 +182,9 @@ def test_auth_success(client, db):
     assert auth.json()["token_type"] == "bearer"
     assert access_token
     assert refresh_token
+    assert auth.cookies.get("access_token")
+    assert auth.cookies.get("refresh_token")
+    assert auth.cookies.get("authenticated_until")
 
     # Attempt to use the token to access a protected API endpoint
     get = client.get("/api/user/", headers={"Authorization": f"Bearer {access_token}"})

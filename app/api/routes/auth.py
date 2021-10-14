@@ -1,3 +1,5 @@
+import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -36,8 +38,6 @@ def _set_access_token_cookie(response: Response, access_token: str):
 def _set_refresh_token_cookie(response: Response, refresh_token: str):
     # The cookie will expire just prior to the actual JWT expiration to avoid a case where the frontend
     # still has the cookie but the JWT inside of it expired.
-    #
-    # The refresh_token will be used with every API call
     refresh_expiration = get_settings().jwt_refresh_expire_seconds - 5
     response.set_cookie(
         key="refresh_token",
@@ -67,6 +67,21 @@ def auth(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), d
 
     refresh_token = create_refresh_token(sub=user.username)
     _set_refresh_token_cookie(response, refresh_token)
+
+    # Set a non-HttpOnly cookie that the frontend application can access to know that it is logged in.
+    # The frontend can use the value in this cookie to know when to force the user to log in again
+    # since using a refresh token will continually extend its lifetime.
+    refresh_expiration = get_settings().jwt_refresh_expire_seconds - 5
+    authenticated_until = datetime.datetime.utcnow() + datetime.timedelta(seconds=refresh_expiration)
+    response.set_cookie(
+        key="authenticated_until",
+        value=str(authenticated_until.timestamp()),
+        httponly=False,
+        secure=get_settings().cookies_secure,
+        samesite=get_settings().cookies_samesite,
+        max_age=refresh_expiration,
+        expires=refresh_expiration,
+    )
 
     # Save the refresh token to the database
     user.refresh_token = refresh_token
@@ -100,6 +115,7 @@ def auth_logout(response: Response, username: str = Depends(validate_access_toke
     """
     response.delete_cookie("access_token")
     response.delete_cookie("refresh_token", path="/api/auth/refresh")
+    response.delete_cookie("authenticated_until")
 
     user = crud.read_user_by_username(username=username, db=db)
     user.refresh_token = None
