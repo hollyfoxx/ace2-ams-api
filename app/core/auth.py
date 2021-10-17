@@ -251,6 +251,49 @@ def validate_access_token(access_token: str = Depends(oauth2_access_scheme)) -> 
         )
 
 
+def validate_refresh_token(refresh_token: str = Depends(oauth2_refresh_scheme)) -> str:
+    """
+    Validates that the given refresh_token can be decoded using our secret key, that it is not expired, and
+    that it is in fact an refresh_token and not another type of token.
+
+    This is designed to be used with FastAPI dependency injection so that the token is validated before the API
+    endpoints are invoked.
+
+    Args:
+        refresh_token: a valid refresh_token
+
+    Returns:
+        a string representing the "sub" claim from the token (the username by default)
+    """
+
+    def _is_refresh_token(claims: Mapping) -> bool:
+        return claims["type"] == "refresh_token"
+
+    try:
+        claims = decode_token(refresh_token)
+
+        if _is_refresh_token(claims):
+            return claims["sub"]
+
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token type",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
 def verify_password(password: str, hashed_password: str) -> bool:
     """
     Verifies that the given password matches the given hashed password.
