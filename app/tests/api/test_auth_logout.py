@@ -10,10 +10,10 @@ from tests.helpers import create_test_user
 # INVALID TESTS
 
 
-def test_auth_refresh_invalid_token(client):
-    post = client.post("/api/auth/logout", headers={"Authorization": "Bearer asdf"})
-    assert post.status_code == status.HTTP_401_UNAUTHORIZED
-    assert post.json()["detail"] == "Invalid token"
+def test_auth_logout_invalid_token(client):
+    get = client.get("/api/auth/logout", headers={"Authorization": "Bearer asdf"})
+    assert get.status_code == status.HTTP_401_UNAUTHORIZED
+    assert get.json()["detail"] == "Invalid token"
 
 
 def test_expired_token(client, db, monkeypatch):
@@ -43,16 +43,16 @@ def test_expired_token(client, db, monkeypatch):
     time.sleep(2)
 
     # Attempt to use the token to logout now that the token is expired
-    get = client.post("/api/auth/logout", headers={"Authorization": f"Bearer {access_token}"})
+    get = client.get("/api/auth/logout", headers={"Authorization": f"Bearer {access_token}"})
     assert get.status_code == status.HTTP_401_UNAUTHORIZED
     assert get.json()["detail"] == "Access token expired"
 
 
 def test_missing_token(client):
-    # Attempt to get a new access token without supplying a refresh token
-    refresh = client.post("/api/auth/refresh")
-    assert refresh.status_code == status.HTTP_401_UNAUTHORIZED
-    assert refresh.json()["detail"] == "Not authenticated"
+    # Attempt to logout without supplying an access token
+    get = client.get("/api/auth/logout")
+    assert get.status_code == status.HTTP_401_UNAUTHORIZED
+    assert get.json()["detail"] == "Not authenticated"
 
 
 def test_wrong_token_type(client, db):
@@ -65,10 +65,10 @@ def test_wrong_token_type(client, db):
     assert auth.json()["token_type"] == "bearer"
     assert refresh_token
 
-    # Attempt to use the access token to obtain a new access token
-    refresh = client.post("/api/auth/logout", headers={"Authorization": f"Bearer {refresh_token}"})
-    assert refresh.status_code == status.HTTP_401_UNAUTHORIZED
-    assert refresh.json()["detail"] == "Invalid token type"
+    # Attempt to use the refresh token to logout
+    get = client.get("/api/auth/logout", headers={"Authorization": f"Bearer {refresh_token}"})
+    assert get.status_code == status.HTTP_401_UNAUTHORIZED
+    assert get.json()["detail"] == "Invalid token type"
 
 
 #
@@ -92,7 +92,7 @@ def test_auth_logout_success(client, db):
     assert auth.cookies["refresh_token"] == f'"Bearer {refresh_token}"'
 
     # Attempt to use the access token to logout
-    logout = client.post("/api/auth/logout", headers={"Authorization": f"Bearer {access_token}"})
+    logout = client.get("/api/auth/logout", headers={"Authorization": f"Bearer {access_token}"})
     assert logout.status_code == status.HTTP_200_OK
     assert logout.json() is None
     assert "access_token" not in logout.cookies

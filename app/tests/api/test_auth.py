@@ -184,7 +184,6 @@ def test_auth_success(client: testclient.TestClient, db):
     assert refresh_token
     assert auth.cookies.get("access_token")
     assert auth.cookies.get("refresh_token")
-    assert auth.cookies.get("authenticated_until")
 
     # Attempt to use the token to access a protected API endpoint
     get = client.get("/api/user/", headers={"Authorization": f"Bearer {access_token}"})
