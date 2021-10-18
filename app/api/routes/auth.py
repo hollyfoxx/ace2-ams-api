@@ -8,7 +8,6 @@ from core.auth import (
     create_access_token,
     create_refresh_token,
     refresh_token,
-    validate_access_token,
     validate_refresh_token,
 )
 from core.config import get_settings
@@ -102,18 +101,14 @@ helpers.api_route_auth(
 #
 
 
-def auth_logout(response: Response, username: str = Depends(validate_access_token), db: Session = Depends(get_db)):
+def auth_logout(response: Response):
     """
     The logout endpoint only instructs the browser to delete the access and refresh token cookies. If the API is
     being consumed programatically outside of the browser, then the tokens will remain valid until their expiration.
     """
 
     response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token", path="/api/auth/refresh")
-
-    user = crud.read_user_by_username(username=username, db=db)
-    user.refresh_token = None
-    crud.commit(db)
+    response.delete_cookie("refresh_token", path="/api/auth")
 
 
 helpers.api_route_auth(
