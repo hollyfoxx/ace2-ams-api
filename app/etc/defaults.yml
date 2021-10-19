@@ -78,6 +78,9 @@ node_threat_type:
   - ransomware
   - rat
   - rootkit
+observable_type:
+  - file
+  - ipv4
 user_role:
   - admin
   - analyst

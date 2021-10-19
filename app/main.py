@@ -22,6 +22,7 @@ def get_application():
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["Content-Location"],
     )
 
     _app.include_router(api_router, prefix="/api")
