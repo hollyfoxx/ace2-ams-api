@@ -147,7 +147,7 @@ def test_missing_route_authentication(client, route):
     """
 
     # There are some special endpoints that do not require authentication.
-    if route.path in ["/api/ping", "/api/auth"]:
+    if route.path in ["/api/ping", "/api/auth", "/api/auth/logout"]:
         return
 
     for method in route.methods:
@@ -184,7 +184,6 @@ def test_auth_success(client: testclient.TestClient, db):
     assert refresh_token
     assert auth.cookies.get("access_token")
     assert auth.cookies.get("refresh_token")
-    assert auth.cookies.get("authenticated_until")
 
     # Attempt to use the token to access a protected API endpoint
     get = client.get("/api/user/", headers={"Authorization": f"Bearer {access_token}"})

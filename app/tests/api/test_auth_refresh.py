@@ -13,9 +13,9 @@ from tests.helpers import create_test_user
 
 
 def test_auth_refresh_invalid_token(client):
-    post = client.post("/api/auth/refresh", headers={"Authorization": "Bearer asdf"})
-    assert post.status_code == status.HTTP_401_UNAUTHORIZED
-    assert post.json()["detail"] == "Invalid token"
+    get = client.get("/api/auth/refresh", headers={"Authorization": "Bearer asdf"})
+    assert get.status_code == status.HTTP_401_UNAUTHORIZED
+    assert get.json()["detail"] == "Invalid token"
 
 
 def test_disabled_user(client, db):
@@ -33,7 +33,7 @@ def test_disabled_user(client, db):
     db.commit()
 
     # Attempt to use the refresh token now that the user is disabled
-    refresh = client.post("/api/auth/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
+    refresh = client.get("/api/auth/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
     assert refresh.status_code == status.HTTP_401_UNAUTHORIZED
     assert refresh.json()["detail"] == "Invalid token"
 
@@ -60,14 +60,14 @@ def test_expired_token(client, db, monkeypatch):
     time.sleep(2)
 
     # Attempt to use the refresh token to obtain a new access token
-    refresh = client.post("/api/auth/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
+    refresh = client.get("/api/auth/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
     assert refresh.status_code == status.HTTP_401_UNAUTHORIZED
     assert refresh.json()["detail"] == "Refresh token expired"
 
 
 def test_missing_token(client):
     # Attempt to get a new access token without supplying a refresh token
-    refresh = client.post("/api/auth/refresh")
+    refresh = client.get("/api/auth/refresh")
     assert refresh.status_code == status.HTTP_401_UNAUTHORIZED
     assert refresh.json()["detail"] == "Not authenticated"
 
@@ -83,11 +83,11 @@ def test_reused_token(client, db):
     assert refresh_token
 
     # Attempt to refresh the access token
-    refresh = client.post("/api/auth/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
+    refresh = client.get("/api/auth/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
     assert refresh.status_code == status.HTTP_200_OK
 
     # Using the same refresh token twice will not work since they are rotated upon use
-    refresh = client.post("/api/auth/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
+    refresh = client.get("/api/auth/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
     assert refresh.status_code == status.HTTP_401_UNAUTHORIZED
     assert refresh.json()["detail"] == "Reused token"
 
@@ -103,7 +103,7 @@ def test_wrong_token_type(client, db):
     assert access_token
 
     # Attempt to use the access token to obtain a new access token
-    refresh = client.post("/api/auth/refresh", headers={"Authorization": f"Bearer {access_token}"})
+    refresh = client.get("/api/auth/refresh", headers={"Authorization": f"Bearer {access_token}"})
     assert refresh.status_code == status.HTTP_401_UNAUTHORIZED
     assert refresh.json()["detail"] == "Invalid token type"
 
@@ -147,7 +147,7 @@ def test_auth_refresh_success(client, db, monkeypatch):
     assert get.json()["detail"] == "Access token expired"
 
     # Attempt to refresh the access token
-    refresh = client.post("/api/auth/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
+    refresh = client.get("/api/auth/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
     new_access_token = refresh.json()["access_token"]
     new_refresh_token = refresh.json()["refresh_token"]
     assert refresh.status_code == status.HTTP_200_OK

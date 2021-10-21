@@ -16,12 +16,13 @@ def api_route_auth(
     success_desc: str,
     failure_desc: str,
     response_model: BaseModel = BaseModel,
+    method: str = "POST",
     path: str = "",
 ):
     router.add_api_route(
         path=path,
         endpoint=endpoint,
-        methods=["POST"],
+        methods=[method],
         response_model=response_model,
         responses={
             status.HTTP_200_OK: {"description": success_desc},
@@ -74,7 +75,12 @@ def api_route_read_all(router: APIRouter, endpoint: Callable, response_model: Ba
     )
 
 
-def api_route_read(router: APIRouter, endpoint: Callable, response_model: BaseModel, path: str = "/{uuid}"):
+def api_route_read(
+    router: APIRouter,
+    endpoint: Callable,
+    response_model: BaseModel = BaseModel,
+    path: str = "/{uuid}",
+):
     router.add_api_route(
         dependencies=[Depends(validate_access_token)],
         path=path,
