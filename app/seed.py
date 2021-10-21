@@ -18,6 +18,7 @@ from db.schemas.event_status import EventStatus
 from db.schemas.event_type import EventType
 from db.schemas.event_vector import EventVector
 from db.schemas.node_threat_type import NodeThreatType
+from db.schemas.observable_type import ObservableType
 from db.schemas.user import User
 from db.schemas.user_role import UserRole
 
@@ -107,6 +108,11 @@ if "node_threat_type" in data and not crud.read_all(db_table=NodeThreatType, db=
     for value in data["node_threat_type"]:
         db.add(NodeThreatType(value=value))
         print(f"Adding node threat type: {value}")
+
+if "observable_type" in data and not crud.read_all(db_table=ObservableType, db=db):
+    for value in data["observable_type"]:
+        db.add(ObservableType(value=value))
+        print(f"Adding observable type: {value}")
 
 if not crud.read_all(db_table=UserRole, db=db):
     if "user_role" in data:
