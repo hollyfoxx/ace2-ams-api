@@ -2,8 +2,6 @@ import pytest
 import uuid
 
 from fastapi import status
-from fastapi.testclient import TestClient
-from typing import Tuple
 
 from tests.api.node import (
     INVALID_CREATE_FIELDS,
@@ -13,26 +11,7 @@ from tests.api.node import (
     VALID_THREAT_ACTOR,
     VALID_THREATS,
 )
-
-
-def create_alert(client_valid_access_token: TestClient) -> Tuple[str, str]:
-    """
-    Helper function to create an alert. Returns a tuple of (alert_uuid, analysis_uuid)
-    """
-
-    # Create an alert queue and type
-    client_valid_access_token.post("/api/alert/queue/", json={"value": "test_queue"})
-    client_valid_access_token.post("/api/alert/type/", json={"value": "test_type"})
-
-    # Create the alert
-    create_json = {"queue": "test_queue", "type": "test_type"}
-    create = client_valid_access_token.post("/api/alert/", json=create_json)
-    assert create.status_code == status.HTTP_201_CREATED
-
-    # Read it back
-    get = client_valid_access_token.get(create.headers["Content-Location"])
-
-    return get.json()["uuid"], get.json()["analysis"]["uuid"]
+from tests.helpers import create_alert
 
 
 #

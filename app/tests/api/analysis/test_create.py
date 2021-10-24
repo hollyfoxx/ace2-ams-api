@@ -4,7 +4,6 @@ import uuid
 
 from fastapi import status
 
-from tests.api.observable_instance.test_create import create_alert
 from tests.api.node import (
     INVALID_CREATE_FIELDS,
     NONEXISTENT_FIELDS,
@@ -13,6 +12,7 @@ from tests.api.node import (
     VALID_THREAT_ACTOR,
     VALID_THREATS,
 )
+from tests.helpers import create_alert
 
 
 #

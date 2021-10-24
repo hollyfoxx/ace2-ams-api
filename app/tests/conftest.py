@@ -73,7 +73,7 @@ def client_valid_access_token(client, monkeypatch):
     """
 
     def mock_validate_access_token():
-        pass
+        return "analyst"
 
     # Due to how imports work, patching __code__ accounts for all cases for how the function is imported and used.
     monkeypatch.setattr("core.auth.validate_access_token.__code__", mock_validate_access_token.__code__)
