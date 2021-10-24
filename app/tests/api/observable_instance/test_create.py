@@ -281,13 +281,15 @@ def test_create_bulk(client_valid_access_token):
     observable_instances = []
     for i in range(3):
         observable_uuid = str(uuid.uuid4())
-        observable_instances.append({
-            "alert_uuid": alert_uuid,
-            "parent_analysis_uuid": analysis_uuid,
-            "type": "test_type",
-            "uuid": observable_uuid,
-            "value": f"test{i}",
-        })
+        observable_instances.append(
+            {
+                "alert_uuid": alert_uuid,
+                "parent_analysis_uuid": analysis_uuid,
+                "type": "test_type",
+                "uuid": observable_uuid,
+                "value": f"test{i}",
+            }
+        )
     create = client_valid_access_token.post("/api/observable/instance/", json=observable_instances)
     assert create.status_code == status.HTTP_201_CREATED
 
