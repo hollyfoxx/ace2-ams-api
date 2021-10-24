@@ -104,7 +104,9 @@ def get_all_alerts(
             query = query.join(AlertDisposition).where(AlertDisposition.value == disposition)
 
     if disposition_user:
-        query = query.join(User, onclause=Alert.disposition_user_uuid == User.uuid).where(User.username == disposition_user)
+        query = query.join(User, onclause=Alert.disposition_user_uuid == User.uuid).where(
+            User.username == disposition_user
+        )
 
     if dispositioned_after:
         query = query.where(Alert.disposition_time > dispositioned_after)

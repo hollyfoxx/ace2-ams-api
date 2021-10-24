@@ -43,7 +43,9 @@ def create_alert(
     if disposition:
         dispositions = client_valid_access_token.get("/api/alert/disposition/")
         if not any(d["value"] == disposition for d in dispositions.json()):
-            client_valid_access_token.post("/api/alert/disposition/", json={"value": disposition, "rank": len(dispositions.json()) + 1})
+            client_valid_access_token.post(
+                "/api/alert/disposition/", json={"value": disposition, "rank": len(dispositions.json()) + 1}
+            )
 
         client_valid_access_token.patch(
             create.headers["Content-Location"], json={"disposition": disposition, "version": get.json()["version"]}
@@ -94,7 +96,7 @@ def create_event(client_valid_access_token: TestClient, name: str, status: str =
     """
     Helper function to create an event. Returns the event UUID.
     """
-    
+
     # Create an event status and remediation
     client_valid_access_token.post("/api/event/status/", json={"value": status})
 

@@ -23,9 +23,7 @@ class AlertBase(NodeBase):
         default_factory=datetime.utcnow, description="The time the activity alerted on occurred"
     )
 
-    insert_time: datetime = Field(
-        default_factory=datetime.utcnow, description="The time the alert was created"
-    )
+    insert_time: datetime = Field(default_factory=datetime.utcnow, description="The time the alert was created")
 
     instructions: Optional[type_str] = Field(
         description="""An optional human readable list of instructions that an analyst should perform when manually
