@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
+from typing import List
 from uuid import UUID, uuid4
 
 from api.models.observable_instance import ObservableInstanceCreate, ObservableInstanceRead, ObservableInstanceUpdate
@@ -25,63 +26,67 @@ router = APIRouter(
 #
 
 
-def create_observable_instance(
-    observable_instance: ObservableInstanceCreate,
+def create_observable_instances(
+    observable_instances: List[ObservableInstanceCreate],
     request: Request,
     response: Response,
     db: Session = Depends(get_db),
 ):
-    # Create the new observable instance Node using the data from the request
-    new_observable_instance: ObservableInstance = create_node(
-        node_create=observable_instance,
-        db_node_type=ObservableInstance,
-        db=db,
-        exclude={"parent_analysis_uuid", "performed_analysis_uuids", "type", "value"},
-    )
-
-    # Read the required fields from the database to use with the new observable instance
-    new_observable_instance.alert = crud.read(uuid=observable_instance.alert_uuid, db_table=Alert, db=db)
-    new_observable_instance.parent_analysis = crud.read(
-        uuid=observable_instance.parent_analysis_uuid, db_table=Analysis, db=db
-    )
-
-    # Adding an observable instance counts as modifying the alert and the analysis, so they should both get new versions
-    new_observable_instance.alert.version = uuid4()
-    new_observable_instance.parent_analysis.version = uuid4()
-
-    # Set any performed analyses that were given
-    for performed_analysis_uuid in observable_instance.performed_analysis_uuids:
-        db_analysis = crud.read(uuid=performed_analysis_uuid, db_table=Analysis, db=db)
-        new_observable_instance.performed_analyses.append(db_analysis)
-
-        # This counts as editing the analysis, so it should receive an updated version
-        db_analysis.version = uuid4()
-
-    # Set the redirection observable instance if one was given
-    if observable_instance.redirection_uuid:
-        new_observable_instance.redirection = crud.read(
-            uuid=observable_instance.redirection_uuid,
-            db_table=ObservableInstance,
+    for observable_instance in observable_instances:
+        # Create the new observable instance Node using the data from the request
+        new_observable_instance: ObservableInstance = create_node(
+            node_create=observable_instance,
+            db_node_type=ObservableInstance,
             db=db,
+            exclude={"parent_analysis_uuid", "performed_analysis_uuids", "type", "value"},
         )
 
-    # Lastly, check if the Observable represented by this instance already exists. Create it if it does not.
-    db_observable = crud.read_observable(type=observable_instance.type, value=observable_instance.value, db=db)
-    if not db_observable:
-        db_observable_type = crud.read_by_value(value=observable_instance.type, db_table=ObservableType, db=db)
-        db_observable = Observable(type=db_observable_type, value=observable_instance.value)
+        # Read the required fields from the database to use with the new observable instance
+        new_observable_instance.alert = crud.read(uuid=observable_instance.alert_uuid, db_table=Alert, db=db)
+        new_observable_instance.parent_analysis = crud.read(
+            uuid=observable_instance.parent_analysis_uuid, db_table=Analysis, db=db
+        )
 
-    # Associate the observable instance with its observable
-    new_observable_instance.observable = db_observable
+        # Adding an observable instance counts as modifying the alert and the analysis, so they should both get new versions
+        new_observable_instance.alert.version = uuid4()
+        new_observable_instance.parent_analysis.version = uuid4()
 
-    # Save the new analysis to the database
-    db.add(new_observable_instance)
+        # Set any performed analyses that were given
+        for performed_analysis_uuid in observable_instance.performed_analysis_uuids:
+            db_analysis = crud.read(uuid=performed_analysis_uuid, db_table=Analysis, db=db)
+            new_observable_instance.performed_analyses.append(db_analysis)
+
+            # This counts as editing the analysis, so it should receive an updated version
+            db_analysis.version = uuid4()
+
+        # Set the redirection observable instance if one was given
+        if observable_instance.redirection_uuid:
+            new_observable_instance.redirection = crud.read(
+                uuid=observable_instance.redirection_uuid,
+                db_table=ObservableInstance,
+                db=db,
+            )
+
+        # Lastly, check if the Observable represented by this instance already exists. Create it if it does not.
+        db_observable = crud.read_observable(type=observable_instance.type, value=observable_instance.value, db=db)
+        if not db_observable:
+            db_observable_type = crud.read_by_value(value=observable_instance.type, db_table=ObservableType, db=db)
+            db_observable = Observable(type=db_observable_type, value=observable_instance.value)
+
+        # Associate the observable instance with its observable
+        new_observable_instance.observable = db_observable
+
+        # Add the new observable instance to the database
+        db.add(new_observable_instance)
+
+    # Save the database changes
     crud.commit(db)
 
+    # This will respond with the Content-Location for the last observable instance in the given list.
     response.headers["Content-Location"] = request.url_for("get_observable_instance", uuid=new_observable_instance.uuid)
 
 
-helpers.api_route_create(router, create_observable_instance)
+helpers.api_route_create(router, create_observable_instances)
 
 
 #
