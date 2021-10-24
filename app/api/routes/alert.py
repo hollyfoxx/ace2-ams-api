@@ -1,11 +1,17 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, Request, Response
+from fastapi_pagination import LimitOffsetPage
+from fastapi_pagination.ext.sqlalchemy_future import paginate
+from sqlalchemy import select
 from sqlalchemy.orm import Session
+from typing import Optional
 from uuid import UUID, uuid4
 
 from api.models.alert import AlertCreate, AlertRead, AlertUpdate
 from api.models.analysis import AnalysisCreate
 from api.routes import helpers
 from api.routes.node import create_node, update_node
+from core.auth import validate_access_token
 from db import crud
 from db.database import get_db
 from db.schemas.alert import Alert
@@ -16,6 +22,7 @@ from db.schemas.alert_tool_instance import AlertToolInstance
 from db.schemas.alert_type import AlertType
 from db.schemas.analysis import Analysis
 from db.schemas.event import Event
+from db.schemas.user import User
 
 
 router = APIRouter(
@@ -70,8 +77,77 @@ helpers.api_route_create(router, create_alert)
 #
 
 
-# def get_all_alerts(db: Session = Depends(get_db)):
-#     return crud.read_all(db_table=Alert, db=db)
+def get_all_alerts(
+    db: Session = Depends(get_db),
+    disposition: Optional[str] = None,
+    disposition_user: Optional[str] = None,
+    dispositioned_after: Optional[datetime] = None,
+    dispositioned_before: Optional[datetime] = None,
+    event_uuid: Optional[UUID] = None,
+    event_time_after: Optional[datetime] = None,
+    event_time_before: Optional[datetime] = None,
+    insert_time_after: Optional[datetime] = None,
+    insert_time_before: Optional[datetime] = None,
+    name: Optional[str] = None,
+    owner: Optional[str] = None,
+    queue: Optional[str] = None,
+    tool: Optional[str] = None,
+    tool_instance: Optional[str] = None,
+    type: Optional[str] = None,
+):
+    query = select(Alert)
+
+    if disposition:
+        if disposition.lower() == "none":
+            query = query.where(Alert.disposition_uuid == None)  # pylint: disable=singleton-comparison
+        else:
+            query = query.join(AlertDisposition).where(AlertDisposition.value == disposition)
+
+    if disposition_user:
+        query = query.join(User, onclause=Alert.disposition_user_uuid == User.uuid).where(User.username == disposition_user)
+
+    if dispositioned_after:
+        query = query.where(Alert.disposition_time > dispositioned_after)
+
+    if dispositioned_before:
+        query = query.where(Alert.disposition_time < dispositioned_before)
+
+    if event_time_after:
+        query = query.where(Alert.event_time > event_time_after)
+
+    if event_time_before:
+        query = query.where(Alert.event_time < event_time_before)
+
+    if event_uuid:
+        query = query.join(Event, onclause=Alert.event_uuid == Event.uuid).where(Event.uuid == event_uuid)
+
+    if insert_time_after:
+        query = query.where(Alert.insert_time > insert_time_after)
+
+    if insert_time_before:
+        query = query.where(Alert.insert_time < insert_time_before)
+
+    if name:
+        query = query.where(Alert.name.ilike(f"%{name}%"))
+
+    if owner:
+        query = query.join(User, onclause=Alert.owner_uuid == User.uuid).where(User.username == owner)
+
+    if queue:
+        query = query.join(AlertQueue).where(AlertQueue.value == queue)
+
+    if tool:
+        query = query.join(AlertTool).where(AlertTool.value == tool)
+
+    if tool_instance:
+        query = query.join(AlertToolInstance).where(AlertToolInstance.value == tool_instance)
+
+    if type:
+        query = query.join(AlertType).where(AlertType.value == type)
+
+    results = paginate(db, query)
+
+    return results
 
 
 def get_alert(uuid: UUID, db: Session = Depends(get_db)):
@@ -79,7 +155,7 @@ def get_alert(uuid: UUID, db: Session = Depends(get_db)):
 
 
 # It does not make sense to have a get_all_alerts route at this point (and certainly not without pagination).
-# helpers.api_route_read_all(router, get_all_alerts, List[AlertRead])
+helpers.api_route_read_all(router, get_all_alerts, LimitOffsetPage[AlertRead])
 helpers.api_route_read(router, get_alert, AlertRead)
 
 
@@ -94,6 +170,7 @@ def update_alert(
     request: Request,
     response: Response,
     db: Session = Depends(get_db),
+    username: str = Depends(validate_access_token),
 ):
     # Update the Node attributes
     db_alert: Alert = update_node(node_update=alert, uuid=uuid, db_table=Alert, db=db)
@@ -106,6 +183,8 @@ def update_alert(
 
     if "disposition" in update_data:
         db_alert.disposition = crud.read_by_value(value=update_data["disposition"], db_table=AlertDisposition, db=db)
+        db_alert.disposition_time = datetime.utcnow()
+        db_alert.disposition_user = crud.read_user_by_username(username=username, db=db)
 
     if "event_uuid" in update_data:
         db_alert.event = crud.read(uuid=update_data["event_uuid"], db_table=Event, db=db)
