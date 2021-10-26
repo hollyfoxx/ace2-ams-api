@@ -86,7 +86,7 @@ def test_update_invalid_version(client_valid_access_token):
         "type": "test_type",
         "value": "test",
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Make sure you cannot update it using an invalid version
     update = client_valid_access_token.patch(create.headers["Content-Location"], json={"version": str(uuid.uuid4())})
@@ -109,7 +109,7 @@ def test_update_nonexistent_performed_analysis_uuids(client_valid_access_token):
         "value": "test",
         "version": version,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_201_CREATED
 
     # Make sure you cannot update it to use a nonexistent analysis UUID
@@ -135,7 +135,7 @@ def test_update_nonexistent_redirection_uuid(client_valid_access_token):
         "value": "test",
         "version": version,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_201_CREATED
 
     # Make sure you cannot update it to use a nonexistent redirection UUID
@@ -165,7 +165,7 @@ def test_update_nonexistent_node_fields(client_valid_access_token, key, value):
         "value": "test",
         "version": version,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Make sure you cannot update it to use a nonexistent node field value
     update = client_valid_access_token.patch(create.headers["Content-Location"], json={key: value, "version": version})
@@ -200,7 +200,7 @@ def test_update_performed_analysis_uuids(client_valid_access_token):
         "value": "test",
         "version": version,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Read it back
     get = client_valid_access_token.get(create.headers["Content-Location"])
@@ -251,7 +251,7 @@ def test_update_redirection_uuid(client_valid_access_token):
         "value": "test",
         "version": version,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Read it back
     get = client_valid_access_token.get(create.headers["Content-Location"])
@@ -267,7 +267,7 @@ def test_update_redirection_uuid(client_valid_access_token):
         "value": "test",
         "version": version,
     }
-    client_valid_access_token.post("/api/observable/instance/", json=create2_json)
+    client_valid_access_token.post("/api/observable/instance/", json=[create2_json])
 
     # Update the redirection UUID
     update = client_valid_access_token.patch(
@@ -301,7 +301,7 @@ def test_update_valid_node_directives(client_valid_access_token, values):
         "value": "test",
         "version": version,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Read it back
     get = client_valid_access_token.get(create.headers["Content-Location"])
@@ -344,7 +344,7 @@ def test_update_valid_node_tags(client_valid_access_token, values):
         "value": "test",
         "version": version,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Read it back
     get = client_valid_access_token.get(create.headers["Content-Location"])
@@ -387,7 +387,7 @@ def test_update_valid_node_threat_actor(client_valid_access_token, value):
         "value": "test",
         "version": version,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Read it back
     get = client_valid_access_token.get(create.headers["Content-Location"])
@@ -433,7 +433,7 @@ def test_update_valid_node_threats(client_valid_access_token, values):
         "value": "test",
         "version": version,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Read it back
     get = client_valid_access_token.get(create.headers["Content-Location"])
@@ -489,7 +489,7 @@ def test_update(client_valid_access_token, key, initial_value, updated_value):
         "version": version,
     }
     create_json[key] = initial_value
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Read it back
     get = client_valid_access_token.get(create.headers["Content-Location"])

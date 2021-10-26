@@ -87,7 +87,7 @@ def test_create_invalid_fields(client_valid_access_token, key, value):
         "value": "test",
     }
     create_json[key] = value
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     assert key in create.text
 
@@ -105,7 +105,7 @@ def test_create_invalid_node_fields(client_valid_access_token, key, value):
         "value": "test",
     }
     create_json[key] = value
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
@@ -124,10 +124,10 @@ def test_create_duplicate_uuid(client_valid_access_token):
         "type": "test_type",
         "value": "test",
     }
-    client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Ensure you cannot create another object with the same UUID
-    create2 = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create2 = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create2.status_code == status.HTTP_409_CONFLICT
 
 
@@ -146,7 +146,7 @@ def test_create_nonexistent_alert(client_valid_access_token):
         "type": "test_type",
         "value": "test",
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_404_NOT_FOUND
     assert alert_uuid in create.text
 
@@ -166,7 +166,7 @@ def test_create_nonexistent_analysis(client_valid_access_token):
         "type": "test_type",
         "value": "test",
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_404_NOT_FOUND
     assert analysis_uuid in create.text
 
@@ -187,7 +187,7 @@ def test_create_nonexistent_performed_analysis(client_valid_access_token):
         "type": "test_type",
         "value": "test",
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_404_NOT_FOUND
     assert performed_analysis_uuid in create.text
 
@@ -208,7 +208,7 @@ def test_create_nonexistent_redirection(client_valid_access_token):
         "type": "test_type",
         "value": "test",
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_404_NOT_FOUND
     assert redirection_uuid in create.text
 
@@ -227,7 +227,7 @@ def test_create_nonexistent_type(client_valid_access_token):
         "type": "abc",
         "value": "test",
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_404_NOT_FOUND
     assert "abc" in create.text
 
@@ -251,13 +251,58 @@ def test_create_nonexistent_node_fields(client_valid_access_token, key, value):
         "value": "test",
     }
     create_json[key] = value
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_404_NOT_FOUND
 
 
 #
 # VALID TESTS
 #
+
+
+def test_create_bulk(client_valid_access_token):
+    # Create an alert
+    alert_uuid, analysis_uuid = create_alert(client_valid_access_token=client_valid_access_token)
+
+    # Read the alert back to get its current version
+    # TODO: Fix this hardcoded URL
+    get_alert = client_valid_access_token.get(f"http://testserver/api/alert/{alert_uuid}")
+    initial_alert_version = get_alert.json()["version"]
+
+    # Read the analysis back to get its current version
+    # TODO: Fix this hardcoded URL
+    get_analysis = client_valid_access_token.get(f"http://testserver/api/analysis/{analysis_uuid}")
+    initial_analysis_version = get_analysis.json()["version"]
+
+    # Create an observable type
+    client_valid_access_token.post("/api/observable/type/", json={"value": "test_type"})
+
+    # Create some observable instances
+    observable_instances = []
+    for i in range(3):
+        observable_uuid = str(uuid.uuid4())
+        observable_instances.append(
+            {
+                "alert_uuid": alert_uuid,
+                "parent_analysis_uuid": analysis_uuid,
+                "type": "test_type",
+                "uuid": observable_uuid,
+                "value": f"test{i}",
+            }
+        )
+    create = client_valid_access_token.post("/api/observable/instance/", json=observable_instances)
+    assert create.status_code == status.HTTP_201_CREATED
+
+    # Read the parent analysis back. There should be 3 discovered observable instance UUIDs.
+    # TODO: Fix this hardcoded URL
+    get_analysis = client_valid_access_token.get(f"http://testserver/api/analysis/{analysis_uuid}")
+    assert len(get_analysis.json()["discovered_observable_uuids"]) == 3
+
+    # Additionally, creating an observable instance should trigger the alert and analysis to get a new version.
+    # TODO: Fix this hardcoded URL
+    get_alert = client_valid_access_token.get(f"http://testserver/api/alert/{alert_uuid}")
+    assert get_alert.json()["version"] != initial_alert_version
+    assert get_analysis.json()["version"] != initial_analysis_version
 
 
 @pytest.mark.parametrize(
@@ -288,7 +333,7 @@ def test_create_valid_optional_fields(client_valid_access_token, key, value):
         "value": "test",
     }
     create_json[key] = value
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Read it back
     get = client_valid_access_token.get(create.headers["Content-Location"])
@@ -323,7 +368,7 @@ def test_create_valid_performed_analysis_uuids(client_valid_access_token):
         "type": "test_type",
         "value": "test",
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Read it back
     get = client_valid_access_token.get(create.headers["Content-Location"])
@@ -355,7 +400,7 @@ def test_create_valid_redirection(client_valid_access_token):
         "uuid": observable_instance_uuid,
         "value": "test",
     }
-    client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Create another observable instance that redirects to the previously created one
     create_json = {
@@ -365,7 +410,7 @@ def test_create_valid_redirection(client_valid_access_token):
         "type": "test_type",
         "value": "test",
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
 
     # Read it back
     get = client_valid_access_token.get(create.headers["Content-Location"])
@@ -398,7 +443,7 @@ def test_create_valid_required_fields(client_valid_access_token):
         "uuid": observable_uuid,
         "value": "test",
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_201_CREATED
 
     # Read it back
@@ -447,7 +492,7 @@ def test_create_valid_node_directives(client_valid_access_token, values):
         "value": "test",
         "directives": values,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_201_CREATED
 
     # Read it back
@@ -479,7 +524,7 @@ def test_create_valid_node_tags(client_valid_access_token, values):
         "value": "test",
         "tags": values,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_201_CREATED
 
     # Read it back
@@ -511,7 +556,7 @@ def test_create_valid_node_threat_actor(client_valid_access_token, value):
         "value": "test",
         "threat_actor": value,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_201_CREATED
 
     # Read it back
@@ -549,7 +594,7 @@ def test_create_valid_node_threats(client_valid_access_token, values):
         "value": "test",
         "threats": values,
     }
-    create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert create.status_code == status.HTTP_201_CREATED
 
     # Read it back

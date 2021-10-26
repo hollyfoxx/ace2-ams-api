@@ -160,7 +160,7 @@ def test_create_valid_parent_observable_uuid(client_valid_access_token):
         "uuid": observable_uuid,
         "value": "test",
     }
-    observable_create = client_valid_access_token.post("/api/observable/instance/", json=create_json)
+    observable_create = client_valid_access_token.post("/api/observable/instance/", json=[create_json])
     assert observable_create.status_code == status.HTTP_201_CREATED
 
     # Read the observable instance back to get its current version
