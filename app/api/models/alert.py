@@ -23,6 +23,8 @@ class AlertBase(NodeBase):
         default_factory=datetime.utcnow, description="The time the activity alerted on occurred"
     )
 
+    insert_time: datetime = Field(default_factory=datetime.utcnow, description="The time the alert was created")
+
     instructions: Optional[type_str] = Field(
         description="""An optional human readable list of instructions that an analyst should perform when manually
             reviewing this alert."""
@@ -59,8 +61,6 @@ class AlertRead(NodeRead, AlertBase):
     disposition_user: Optional[UserRead] = Field(description="The user who most recently dispositioned this alert")
 
     event_uuid: Optional[UUID4] = Field(description="The UUID of the event containing this alert")
-
-    insert_time: datetime = Field(description="The time this alert was created")
 
     owner: Optional[UserRead] = Field(description="The user who has taken ownership of this alert")
 

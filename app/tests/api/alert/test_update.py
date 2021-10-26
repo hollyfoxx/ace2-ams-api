@@ -11,6 +11,7 @@ from tests.api.node import (
     VALID_THREAT_ACTOR,
     VALID_THREATS,
 )
+from tests.helpers import create_test_user
 
 
 #
@@ -146,9 +147,11 @@ def test_update_nonexistent_uuid(client_valid_access_token):
 #
 
 
-def test_update_disposition(client_valid_access_token):
-    # Create an alert queue and type
-    client_valid_access_token.post("/api/alert/queue/", json={"value": "test_queue"})
+def test_update_disposition(client_valid_access_token, db):
+    # Create an analyst user
+    create_test_user(db=db, username="analyst", password="asdfasdf")
+
+    # Create an alert type
     client_valid_access_token.post("/api/alert/type/", json={"value": "test_type"})
 
     # Create an alert
